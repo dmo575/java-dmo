@@ -1,3 +1,3 @@
-# Java Game Engine
+# Learning abour rendering and UI
 
-### Right now the code here is just me following on tutorials and learning about rendering and the such. No engine.
+### Right now the code here is just me messing with Java's Swing and later JavaFx.
