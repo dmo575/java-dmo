@@ -1,3 +1,3 @@
-# Learning abour rendering and UI
+# About
 
-### Right now the code here is just me messing with Java's Swing and later JavaFx.
+This is just a place that contains various examples of Java's awt package that I write as I learn it.
