@@ -30,25 +30,16 @@ class MyCanvas extends Canvas {
         // canvas set up
         setSize(300, 300);
         setBackground(Color.LIGHT_GRAY);
-
-        //if(getBufferStrategy() == null) {
-        //    createBufferStrategy(2);
-        //}
-        //bufferStrat = getBufferStrategy();
     }
 
     @Override
     public void paint(Graphics g) {
 
-        g.dispose();
-        //g.setColor(Color.BLUE);
-        //g.drawRect(0, 0, 25, 50);
-        //g.setColor(Color.RED);
-        //g.fillRect(0, 0, 15, 25);
         System.out.println("paint");
         BufferStrategy bufferStrat = getBufferStrategy();
+        Graphics grap = bufferStrat.getDrawGraphics();
+
         bufferStrat.show();
-        //bufferStrat = getBufferStrategy();
     }
 }
 
@@ -60,7 +51,6 @@ class Btn_paint extends Button {
     Btn_paint(Canvas canvas) {
         this.canvas = canvas;
         setLabel("PAINT");
-        //setBounds(0, 0, 80, 30);
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 prep_img();
@@ -85,6 +75,6 @@ class Btn_paint extends Button {
         grap.setColor(Color.RED);
         grap.drawRect(0, 0, 25, 50);
         grap.setColor(Color.BLUE);
-        grap.fillRect(0, 0, 15, 25);
+        grap.fillRect(20, 20, 15, 25);
     }
 }
