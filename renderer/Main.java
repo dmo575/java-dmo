@@ -6,7 +6,6 @@ import java.awt.Graphics;
 
 public class Main {
 
-
     class Vec implements Printable {
         float x, y, z;
         Vec(float x, float y, float z){
@@ -91,9 +90,10 @@ public class Main {
         frame.setLayout(null);
         frame.setVisible(true);
         frame.setBackground(Color.LIGHT_GRAY);
+        frame.setLocationRelativeTo(null);
 
         // load canvas
-        Canvas canvas = new UnixCanvas(frame, 400);
+        Canvas canvas = new CustomCanvas(frame, 400, 400, true);
 
         // add components to frame
         frame.add(canvas);
@@ -101,19 +101,20 @@ public class Main {
         Main main = new Main();
         Mesh mesh = main.GetUnixCube();
         mesh.Print();
-
     }
 }
 
-class UnixCanvas extends Canvas {
+class CustomCanvas extends Canvas {
 
-    UnixCanvas(Frame frame, int size) {
-        setSize(size, size);
+    CustomCanvas(Frame frame, int width, int height, boolean center) {
+        setSize(width, height);
+        setBackground(Color.BLACK);
+
+        if(!center) return;
+
         int pos_x = frame.getSize().width - getSize().width - (getSize().width / 2);
         int pos_y = frame.getSize().height - getSize().height - (getSize().height / 2);
-
         setLocation(pos_x, pos_y);
-        setBackground(Color.BLACK);
     }
 
     @Override
