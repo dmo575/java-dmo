@@ -6,7 +6,7 @@ import java.awt.Graphics;
 
 public class Main {
 
-    class Vec implements Printable {
+    public static class Vec implements Printable {
         float x, y, z;
         Vec(float x, float y, float z){
             this.x = x;
@@ -92,28 +92,35 @@ public class Main {
         frame.setBackground(Color.LIGHT_GRAY);
         frame.setLocationRelativeTo(null);
 
-        // load canvas
-        Canvas canvas = new CustomCanvas(frame, 400, 400, true);
 
-        // add components to frame
+        //It1_Render_points canvas = new It1_Render_points(frame, 300, 200, true);
+        It1_Render_points canvas = new It1_Render_points(frame, 600, 300, true);
+
+
         frame.add(canvas);
+    }
 
-        Main main = new Main();
-        Mesh mesh = main.GetUnixCube();
-        mesh.Print();
+    static public void WorldToCanvas(Vec p, int w, int h) {
+        // w and h are the width and height of the canvas
+        p.x = (w/2) + p.x;
+        p.y = (h/2) + p.y;
     }
 }
 
 class CustomCanvas extends Canvas {
 
+    int width, height;
+
     CustomCanvas(Frame frame, int width, int height, boolean center) {
         setSize(width, height);
+        this.width = width;
+        this.height = height;
         setBackground(Color.BLACK);
 
         if(!center) return;
 
-        int pos_x = frame.getSize().width - getSize().width - (getSize().width / 2);
-        int pos_y = frame.getSize().height - getSize().height - (getSize().height / 2);
+        int pos_x = frame.getSize().width / 2 - (getSize().width / 2);
+        int pos_y = frame.getSize().height / 2 - (getSize().height / 2);
         setLocation(pos_x, pos_y);
     }
 
@@ -122,8 +129,41 @@ class CustomCanvas extends Canvas {
         g.setColor(Color.BLUE);
         g.drawRect(10, 10, 10, 10);
     }
+
 }
 
 interface Printable {
     public void Print();
+}
+
+class It1_Render_points extends CustomCanvas {
+
+    // skip this
+    It1_Render_points(Frame frame, int width, int height, boolean center) {
+        super(frame, width, height, center);
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        // we init two points, with same X and Y but different Z values
+        Main.Vec[] points = new Main.Vec[2];
+        points[0] = new Main.Vec(-100, 100, 3);
+        points[1] = new Main.Vec(100, -100, 20);
+
+        // we offset the values of those points so that we can give the illusion that the canvas is aiming at the origin of the world.
+        for (Main.Vec v : points) {
+            Main.WorldToCanvas(v, width, height);
+            AddAspectRatio(v);
+        }
+
+        // we draw both points. You can only see the red one because its drawn on top of the blue one.
+        //g.setColor(Color.BLUE);
+        g.setColor(Color.RED);
+        g.fillOval((int)points[0].x - 5, (int)points[0].y - 5, 10, 10);
+        g.fillOval((int)points[1].x - 5, (int)points[1].y - 5, 10, 10);
+    }
+
+    void AddAspectRatio(Main.Vec v) {
+        v.x = (height / width) * v.x;
+    }
 }
