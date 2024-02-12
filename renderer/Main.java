@@ -25,8 +25,10 @@ public class Main {
 
     class Tri  implements Printable {
         Vec[] vecs;
-        Tri(Vec a, Vec b, Vec c) {
+        Color color;
+        Tri(Vec a, Vec b, Vec c, Color color) {
             vecs = new Vec[] { a, b, c };
+            this.color = color;
         }
 
         public void Print() {
@@ -60,30 +62,33 @@ public class Main {
     private Mesh GetUnixCube() {
 
         // SOUTH
-        Tri south_1 = new Tri(new Vec (0,0,0), new Vec (0,1,0), new Vec (1,1,0));
-        Tri south_2 = new Tri(new Vec (0,1,0), new Vec (1,1,0), new Vec (1,0,0));
+        Tri south_1 = new Tri(new Vec (0,0,0), new Vec (0,1,0), new Vec (1,1,0), Color.BLUE);
+        Tri south_2 = new Tri(new Vec (0,1,0), new Vec (1,1,0), new Vec (1,0,0), Color.BLUE);
 
         // NORTH
-        Tri north_1 = new Tri(new Vec (0,0,1), new Vec (1,0,1), new Vec (0,1,1));
-        Tri north_2 = new Tri(new Vec (0,1,1), new Vec (1,0,1), new Vec (1,1,1));
+        Tri north_1 = new Tri(new Vec (0,0,1), new Vec (1,0,1), new Vec (0,1,1), Color.RED);
+        Tri north_2 = new Tri(new Vec (0,1,1), new Vec (1,0,1), new Vec (1,1,1), Color.RED);
 
         // WEST
-        Tri west_1 = new Tri(new Vec (0,0,0), new Vec (0,0,1), new Vec (0,1,0));
-        Tri west_2 = new Tri(new Vec (0,0,1), new Vec (0,1,1), new Vec (0,1,0));
+        Tri west_1 = new Tri(new Vec (0,0,0), new Vec (0,0,1), new Vec (0,1,0), Color.YELLOW);
+        Tri west_2 = new Tri(new Vec (0,0,1), new Vec (0,1,1), new Vec (0,1,0), Color.YELLOW);
 
         // EAST
-        Tri east_1 = new Tri(new Vec (1,0,0), new Vec (1,1,0), new Vec (1,0,1));
-        Tri east_2 = new Tri(new Vec (1,1,0), new Vec (1,0,1), new Vec (1,0,0));
+        Tri east_1 = new Tri(new Vec (1,0,0), new Vec (1,1,0), new Vec (1,0,1), Color.GREEN);
+        Tri east_2 = new Tri(new Vec (1,1,0), new Vec (1,0,1), new Vec (1,0,0), Color.GREEN);
 
         // TOP
-        Tri top_1 = new Tri(new Vec (0,1,0), new Vec (0,1,1), new Vec (1,1,0));
-        Tri top_2 = new Tri(new Vec (0,1,1), new Vec (1,1,1), new Vec (1,1,0));
+        Tri top_1 = new Tri(new Vec (0,1,0), new Vec (0,1,1), new Vec (1,1,0), Color.ORANGE);
+        Tri top_2 = new Tri(new Vec (0,1,1), new Vec (1,1,1), new Vec (1,1,0), Color.ORANGE);
 
         // BOTTOM
-        Tri bottom_1 = new Tri(new Vec (0,0,0), new Vec (1,0,0), new Vec (0,0,1));
-        Tri bottom_2 = new Tri(new Vec (0,0,1), new Vec (1,0,0), new Vec (1,0,1));
+        Tri bottom_1 = new Tri(new Vec (0,0,0), new Vec (1,0,0), new Vec (0,0,1), Color.MAGENTA);
+        Tri bottom_2 = new Tri(new Vec (0,0,1), new Vec (1,0,0), new Vec (1,0,1), Color.MAGENTA);
 
-        return new Mesh("Unix cube", new Tri[]{south_1, south_2, north_1, north_2, west_1, west_2, east_1, east_2, top_1, top_2, bottom_1, bottom_2});
+        Tri extra_1 = new Tri(new Vec (50,-50,1), new Vec (100,-50,0), new Vec (50,-100,1), Color.WHITE);
+
+
+        return new Mesh("Unix cube", new Tri[]{south_1, south_2, north_1, north_2, west_1, west_2, east_1, east_2, top_1, top_2, bottom_1, bottom_2, extra_1});
     }
 
     public static void main(String[] args) {
@@ -104,9 +109,10 @@ public class Main {
 
         canvas.SetShape(mesh);
         canvas.SetCamera(camera);
-
-        camera.position.z = -5.0f;
-        camera.far_plane = 5.0f;
+        
+        camera.far_plane = 10;
+        camera.AddPosition(new Vec(0, 0, -5));
+        camera.Print();
 
 
         frame.add(canvas);
@@ -142,11 +148,53 @@ class CustomCanvas extends Canvas {
     public void paint(Graphics g) {
 
         if(camera == null || mesh == null) return;
+        g.setColor(Color.BLUE);
 
-        // based on the position of the camera, we offset
 
-        //g.setColor(Color.BLUE);
-        //g.drawRect(10, 10, 10, 10);
+        // This takes the camera.position and offsets it so that we can get 
+        Main.Vec canvas_offset = new Main.Vec(width / 2, height / 2, 0);
+
+        // we first check if the point is within the range (mind you for this we need the point's FINAL position after rotation and scale modifications)
+        // and in reality we would include the whole triangle if a single point were to enter the range
+
+        Main.Vec cam_center_world = camera.GetPositionWorld();
+        Main.Vec cam_TL_world = camera.GetTLWorld();
+
+        // stores the point position RELATIVE to TL (World space)
+        Main.Vec point_pos_TL = new Main.Vec(0,0,0);
+
+        // we need to make the world point coord relative to the TL world point first, then we print it with Y inverted
+
+
+        for(Main.Tri t : mesh.tris) {
+
+            for(Main.Vec v : t.vecs) {
+
+                // check if one of the points of the triangle exists within the camera's FOV
+                if(v.x >= cam_TL_world.x && v.x <= cam_TL_world.x + width &&
+                v.y <= cam_TL_world.y && v.y >= cam_TL_world.y - height &&
+                v.z >= camera.position.z && v.z <= camera.far_plane) {
+
+                    g.setColor(t.color);
+
+                    // project all points of the triangle into the canvas
+                    for(int i = 0; i < 3; i++) {
+
+                        // get position of point with TL as origin, in world space
+                        point_pos_TL.x = t.vecs[i].x - cam_TL_world.x;
+                        point_pos_TL.y = t.vecs[i].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0));
+
+                        // draw point in canvas
+                        g.drawOval((int)point_pos_TL.x, -(int)point_pos_TL.y, 10, 10);
+
+                    }
+
+                    break;
+                }
+            }
+        }
+
+
     }
 
     public void SetCamera(Camera c) {
@@ -162,60 +210,14 @@ interface Printable {
     public void Print();
 }
 
-class Camera_isometric extends CustomCanvas {
-
-    // skip this
-    Camera_isometric(Frame frame, int width, int height, boolean center) {
-        super(frame, width, height, center);
-    }
-
-
-    @Override
-    public void paint(Graphics g) {
-        // we init two points, with same X and Y but different Z values
-        Main.Vec[] points = new Main.Vec[2];
-        points[0] = new Main.Vec(-100, 100, 3);
-        points[1] = new Main.Vec(100, -100, 20);
-
-        // we offset the values of those points so that we can give the illusion that the canvas is aiming at the origin of the world.
-        for (Main.Vec v : points) {
-            Main.WorldToCanvas(v, width, height);
-        }
-
-        // we draw both points. You can only see the red one because its drawn on top of the blue one.
-        //g.setColor(Color.BLUE);
-        g.setColor(Color.RED);
-        g.fillOval((int)points[0].x - 5, (int)points[0].y - 5, 10, 10);
-        g.fillOval((int)points[1].x - 5, (int)points[1].y - 5, 10, 10);
-    }
-
-    public void paint_old(Graphics g) {
-        // we init two points, with same X and Y but different Z values
-        Main.Vec[] points = new Main.Vec[2];
-        points[0] = new Main.Vec(-100, 100, 3);
-        points[1] = new Main.Vec(100, -100, 20);
-
-        // we offset the values of those points so that we can give the illusion that the canvas is aiming at the origin of the world.
-        for (Main.Vec v : points) {
-            Main.WorldToCanvas(v, width, height);
-        }
-
-        // we draw both points. You can only see the red one because its drawn on top of the blue one.
-        //g.setColor(Color.BLUE);
-        g.setColor(Color.RED);
-        g.fillOval((int)points[0].x - 5, (int)points[0].y - 5, 10, 10);
-        g.fillOval((int)points[1].x - 5, (int)points[1].y - 5, 10, 10);
-    }
-}
-
-class Camera {
+class Camera implements Printable {
     public enum CameraType { Isometric, Perspective };
     public enum AspectRatio { Adaptive, R2_6, R6_4 };
 
     public CameraType camera_type;
     public AspectRatio aspect_ratio;
     public Canvas canvas;
-    public Main.Vec position; // position in the scene, world units
+    public Main.Vec position;
     public Main.Vec scale; // position in the scene, world units
     public float far_plane = 0; // we take the near plane as the position.z coord
 
@@ -225,5 +227,34 @@ class Camera {
         aspect_ratio = r;
         scale = new Main.Vec(1.0f, 1.0f, 0.0f);
         position = new Main.Vec(0.0f, 0.0f, 0.0f);
+        SetPosition(new Main.Vec(0, 0, 0));
+    }
+
+    public void SetPosition(Main.Vec v) {
+        position.x = v.x;
+        position.y = v.y;
+        position.z = v.z;
+    }
+
+    public Main.Vec GetPositionWorld() {
+        // we return a new object to make sure users cannot edit it unless they use the SetPosition()
+        return new Main.Vec(position.x, position.y, position.z);
+    }
+
+    public Main.Vec GetTLWorld() {
+        // we return a new object to make sure users cannot edit it unless they use the SetPosition()
+        return new Main.Vec(position.x - (canvas.getWidth() / 2), position.y + (canvas.getHeight() / 2), position.z);
+    }
+
+    public void AddPosition(Main.Vec v) {
+        position.x += v.x;
+        position.y += v.y;
+        position.z += v.z;
+    }
+
+    @Override
+    public void Print() {
+        System.out.println("Cam TL (World): (" + (position.x - (canvas.getWidth() / 2)) + ", " + (position.y + (canvas.getHeight() / 2)) + ", " + position.z + ")");
+        System.out.println("Cam center (World): (" + position.x + ", " + position.y + ", " + position.z + ")");
     }
 }
