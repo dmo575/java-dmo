@@ -151,9 +151,6 @@ class CustomCanvas extends Canvas {
         g.setColor(Color.BLUE);
 
 
-        // This takes the camera.position and offsets it so that we can get 
-        Main.Vec canvas_offset = new Main.Vec(width / 2, height / 2, 0);
-
         // we first check if the point is within the range (mind you for this we need the point's FINAL position after rotation and scale modifications)
         // and in reality we would include the whole triangle if a single point were to enter the range
 
