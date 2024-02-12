@@ -3,6 +3,10 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Frame;
 import java.awt.Graphics;
+import java.awt.Shape;
+
+import renderer.Camera.AspectRatio;
+import renderer.Camera.CameraType;
 
 public class Main {
 
@@ -84,6 +88,8 @@ public class Main {
 
     public static void main(String[] args) {
 
+        Main main = new Main();
+
         // frame set up
         Frame frame = new Frame();
         frame.setSize(800, 800);
@@ -92,9 +98,15 @@ public class Main {
         frame.setBackground(Color.LIGHT_GRAY);
         frame.setLocationRelativeTo(null);
 
+        CustomCanvas canvas = new CustomCanvas(frame, 600, 400, true);
+        Camera camera = new Camera(canvas, CameraType.Isometric, AspectRatio.Adaptive);
+        Mesh mesh = main.GetUnixCube();
 
-        //It1_Render_points canvas = new It1_Render_points(frame, 300, 200, true);
-        It1_Render_points canvas = new It1_Render_points(frame, 600, 300, true);
+        canvas.SetShape(mesh);
+        canvas.SetCamera(camera);
+
+        camera.position.z = -5.0f;
+        camera.far_plane = 5.0f;
 
 
         frame.add(canvas);
@@ -109,7 +121,9 @@ public class Main {
 
 class CustomCanvas extends Canvas {
 
-    int width, height;
+    int width, height = 0;
+    private Camera camera = null;
+    private Main.Mesh mesh = null; // this will be replaced with a scene in the future
 
     CustomCanvas(Frame frame, int width, int height, boolean center) {
         setSize(width, height);
@@ -126,22 +140,35 @@ class CustomCanvas extends Canvas {
 
     @Override
     public void paint(Graphics g) {
-        g.setColor(Color.BLUE);
-        g.drawRect(10, 10, 10, 10);
+
+        if(camera == null || mesh == null) return;
+
+        // based on the position of the camera, we offset
+
+        //g.setColor(Color.BLUE);
+        //g.drawRect(10, 10, 10, 10);
     }
 
+    public void SetCamera(Camera c) {
+        camera = c;
+    }
+
+    public void SetShape(Main.Mesh s) {
+        mesh = s;
+    }
 }
 
 interface Printable {
     public void Print();
 }
 
-class It1_Render_points extends CustomCanvas {
+class Camera_isometric extends CustomCanvas {
 
     // skip this
-    It1_Render_points(Frame frame, int width, int height, boolean center) {
+    Camera_isometric(Frame frame, int width, int height, boolean center) {
         super(frame, width, height, center);
     }
+
 
     @Override
     public void paint(Graphics g) {
@@ -153,7 +180,6 @@ class It1_Render_points extends CustomCanvas {
         // we offset the values of those points so that we can give the illusion that the canvas is aiming at the origin of the world.
         for (Main.Vec v : points) {
             Main.WorldToCanvas(v, width, height);
-            AddAspectRatio(v);
         }
 
         // we draw both points. You can only see the red one because its drawn on top of the blue one.
@@ -163,7 +189,41 @@ class It1_Render_points extends CustomCanvas {
         g.fillOval((int)points[1].x - 5, (int)points[1].y - 5, 10, 10);
     }
 
-    void AddAspectRatio(Main.Vec v) {
-        v.x = (height / width) * v.x;
+    public void paint_old(Graphics g) {
+        // we init two points, with same X and Y but different Z values
+        Main.Vec[] points = new Main.Vec[2];
+        points[0] = new Main.Vec(-100, 100, 3);
+        points[1] = new Main.Vec(100, -100, 20);
+
+        // we offset the values of those points so that we can give the illusion that the canvas is aiming at the origin of the world.
+        for (Main.Vec v : points) {
+            Main.WorldToCanvas(v, width, height);
+        }
+
+        // we draw both points. You can only see the red one because its drawn on top of the blue one.
+        //g.setColor(Color.BLUE);
+        g.setColor(Color.RED);
+        g.fillOval((int)points[0].x - 5, (int)points[0].y - 5, 10, 10);
+        g.fillOval((int)points[1].x - 5, (int)points[1].y - 5, 10, 10);
+    }
+}
+
+class Camera {
+    public enum CameraType { Isometric, Perspective };
+    public enum AspectRatio { Adaptive, R2_6, R6_4 };
+
+    public CameraType camera_type;
+    public AspectRatio aspect_ratio;
+    public Canvas canvas;
+    public Main.Vec position; // position in the scene, world units
+    public Main.Vec scale; // position in the scene, world units
+    public float far_plane = 0; // we take the near plane as the position.z coord
+
+    Camera(Canvas c, CameraType t, AspectRatio r) {
+        canvas = c;
+        camera_type = t;
+        aspect_ratio = r;
+        scale = new Main.Vec(1.0f, 1.0f, 0.0f);
+        position = new Main.Vec(0.0f, 0.0f, 0.0f);
     }
 }
