@@ -103,7 +103,7 @@ public class Main {
         frame.setBackground(Color.LIGHT_GRAY);
         frame.setLocationRelativeTo(null);
 
-        CustomCanvas canvas = new CustomCanvas(frame, 600, 400, true);
+        CustomCanvas canvas = new CustomCanvas(frame, 300, 200, true);
         Camera camera = new Camera(canvas, CameraType.Isometric, AspectRatio.Adaptive);
         Mesh mesh = main.GetUnixCube();
 
@@ -111,7 +111,7 @@ public class Main {
         canvas.SetCamera(camera);
         
         camera.far_plane = 10;
-        camera.AddPosition(new Vec(0, 0, -5));
+        camera.AddPosition(new Vec(150, -100, -5));
         camera.Print();
 
 
@@ -174,6 +174,14 @@ class CustomCanvas extends Canvas {
 
                     g.setColor(t.color);
 
+                    g.drawLine((int)(t.vecs[0].x - cam_TL_world.x), -(int)(t.vecs[0].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))),
+                    (int)(t.vecs[1].x - cam_TL_world.x), -(int)(t.vecs[1].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))));
+                    g.drawLine((int)(t.vecs[1].x - cam_TL_world.x), -(int)(t.vecs[1].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))),
+                    (int)(t.vecs[2].x - cam_TL_world.x), -(int)(t.vecs[2].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))));
+                    g.drawLine((int)(t.vecs[2].x - cam_TL_world.x), -(int)(t.vecs[2].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))),
+                    (int)(t.vecs[0].x - cam_TL_world.x), -(int)(t.vecs[0].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0))));
+
+
                     // project all points of the triangle into the canvas
                     for(int i = 0; i < 3; i++) {
 
@@ -182,7 +190,7 @@ class CustomCanvas extends Canvas {
                         point_pos_TL.y = t.vecs[i].y - (cam_TL_world.y * Float.compare(cam_TL_world.y, 0));
 
                         // draw point in canvas
-                        g.drawOval((int)point_pos_TL.x, -(int)point_pos_TL.y, 10, 10);
+                        g.drawRect((int)point_pos_TL.x, -(int)point_pos_TL.y, 10, 10);
 
                     }
 
@@ -190,8 +198,6 @@ class CustomCanvas extends Canvas {
                 }
             }
         }
-
-
     }
 
     public void SetCamera(Camera c) {
