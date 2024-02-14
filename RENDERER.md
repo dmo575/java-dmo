@@ -35,9 +35,45 @@ This text aims to record the process of how we can project a 3D scene into a 2D 
 
 ## Prerequisites
 
-You don't need a lot to read trough it. Just basic knowledge about Cartesian maps, OOP, how to get a canvas to paint on in your computer and some imagination to picture the scenarios I will describe. We will be using pseudo-code as the place where we will apply our knowledge in a practical way using OOP, meanwhile our imagination will be the place where we will see all those objects working together.
+You don't need a lot to read trough it. Just basic knowledge about Cartesian maps (which we will cover next), OOP, how to get a canvas to paint on in your computer and some imagination to picture the scenarios I will describe. We will be using pseudo-code as the place to structure things out using OOP and our imagination will as the place where we will build the scenarios and add concepts one by one.
 
 I will also be using Java, wip.
+
+## Cartesian maps
+
+Cartesian planes Play with the idea of one or more axis and an origin point in order to create what we call dimensions.
+
+An axis is a single infinite line, is the visual representation of a direction.
+An origin point is a point of reference to everything that lives in that world, everything that is placed in a dimension can be given a location relative to its origin point.
+
+### From nothing to something (1D)
+
+Lets build a one dimensional cartesian map together.
+
+Imagine a single infinite line. It has no beginning and no end. What can we do with that line? Well, we can move around the line; we can navigate that line down one direction or the other. However, we can't really tell which direction we are going by anything other than "Im going opposite direction than the other direction availible to me". We want to change that if we want to sart placing things in this single dimension.
+
+Picture the line again, in front of you. You follow the line with your index and, at some point you stop your finger. That where you stopped, wherever that is, lets call it origin. We can do some things with this origin point we have just made up in our infinite line.
+
+We can say for example, that instead of one infinite line we have two infinite lines that start at the origin point. In reality is the same line, remember a line represents direction not a real physical line, but still, we can say that and it makes sense. We can now say that one of the lines grows from the origin point on a speciffic direction, and the other one grows grom the origin point on the exact opposite direction to the first line.
+
+Now lets give a name to each line, lets name one line "line A" and the other one "line B". Now we can place another point and we would be able to kind of tell where it is, because no matter where we could say "its on line A" or "its on line B". However that's not accurate enough, we can do better than that. If we can come up with some sort of unit of measurement we would be able to accurately tell where something is based on the origin point and that unit of measurement.
+
+To come up with a unit of measurement, we need to decide on some distance between two points, make that a unit. There is no good way to do this, you just have to trust that in this dimension you can decide on some distance you want and you can accurately check how many times that distance is within wathever two points you want. Lets call this distance a unit.
+
+With that you can now place points
+
+Lets now imagine that we select another place on the line and call it point A. How can we tell where pont A is? Well we can tell point A is at one side of the origin, wathever side that is.
+
+
+
+
+Imagine a single infinite line. It has no beginning and no end. Let's say that we want to mark a spot within that line, so we touch with our finger somewhere along that infinite line to mark a dot in it. How can we tell where that dot is within the line? We cannot say "Is at the beginning of the line" or "its in the middle of it", because the line has no beginning and no end. The line is not really a place, it signifies a direction. You can navigate the line trough going down one direction, or the other, but there 
+
+### Dimensions
+### Axis
+### Planes
+### How a higher dimension sees a lower dimension
+### How a lower dimension can get a glimpse of a higher dimension
 
 ### Understanding our tools
 
@@ -51,19 +87,54 @@ The canvas is a place where you can paint anything you want (lines, dots, rects,
 
 The vectors are just three floats together grouped under the same object. Each float has its own name: X, Y, Z. A vector represents a point in a 3D space
 
-### The 3D and the 2D worlds
+### The situation room
 
-We will start by creating some instances of the vector class. We need to imagine those vectors that we made as real 3D points living in a 3D world, that would be our 3D space.
+Given our tools, we can already write some pseudo-code to illustrate what would we dealing with. We will update this code as we move forward on our understanding of what's going on and what needs to happen. We will also update the formulas we extract out of our understanding of whats going on.
+
+We will display the latest on the many iterations of these two tables I will present now:
+
+**PSEUDO**
+```
+// a method on our canvas class where we can just paint to our application canvas
+Canvas.paint()
+    // we create our 3D world here by creating some 3D points
+    vectors[] points = { ... }
+
+    // we then paint here, so far we have nothing
+```
+**FORMULAS**
+```
+None so far
+```
+
+### The application canvas
+
+The canvas that we are provided with is something that we will reffer to as the **application canvas**. I really encourage you to look at it as something that lives in a 2D space as shown here.
+
+**IMAGE 00**
+
+As you can see, we have a Cartesian map with two axes, X and Y. These two form a 2D plane, and inside it we have a rect. The rect's top left corner is located at the origin point of this 2D space (0,0), the rect's bottom right corner is located at (canvas width, canvas height).
+
+The measurement units of this space is pixels.
+
+### Merging worlds together
+
+Lets start by creating some 3D points, you can do that using the vector class we talked about if you want but right now I just want you to create them in your head. This is the 3D world where you will create those objects:
+
+**IMAGE 01**
+
+We got three axis there, we also got three planes.
+
+//We will start by creating some instances of the vector class. We need to imagine those vectors that we made as real 3D points living in a 3D world, that would be our 3D space.
 
 Our objective is to paste those 3D points into our application's canvas (this is called projecting), and to do so we need to first understand the two worlds we are trying to connect: The 3D world where the points live, and the 2D canvas where we can paint pixels. We need to somehow insert our canvas into that imaginary 3D space where our points live.
 
-If you think about it, the application canvas that we have has its own plane (the XY plane), in fact, you can think of the entire 2D canvas as a plane. This means that we can insert the 2D canvas into the 3D world by selecting a plane in the 3D world where we would like to channel it.
+If you think about it, the application canvas that we are given lives in its own plane (the XY plane), in fact, that plane encapsulates the whole space of that 2D world. This means that we can insert the 2D canvas (its imaginary counter part, that is) into the 3D world by selecting a plane in the 3D world where we would like to channel it. Now, a plane in a 3D space is not exactly the same as a plane in a 2D space because 3D planes have volume and 2D ones do not. But that is why I used the word "chanel", because its not like we can pop up the 2D canvas in the 3D world just like that, its a process and the first step lies in **choosing** one of the 3 planes that our 3D world has to offer.
 
-Since our 2D canvas has the X and Y axis, it makes sense to select the XY plane in the 3D world as the plane to instantiate our canvas in. 
+Since our 2D canvas has a couple of axes named X and Y, it makes sense to select the XY plane in the 3D world as the plane to instantiate our canvas in. It makes things easier to visualize, and its also the convention, so, yeah, so. I mean, yeah, so.
 
-So, the way things are at the moment we have a 2D canvas we can paint on, an imaginary 3D world and an imaginary 2D canvas that we are trying to channel into that 3D world, but so far we have nothing spawned there, we just have a selected 3D plane (XY) in a 3D world that we are interested in, thats not a 2D plane, let alone a canvas. If we want to have a 2D canvas in this 3D world, we need to position this thing somewhere, give it a direction and finally some boundaries.
+So, the way things are at the moment we have a 2D canvas we can paint on (the application canvas), an imaginary 3D world and an imaginary 2D canvas that we are trying to channel into that 3D world, but so far we have nothing spawned there, we just have a selected 3D plane (XY) in a 3D world that we are interested in, thats not a 2D plane, let alone a canvas. If we want to have a 2D canvas in this 3D world, we need to position this thing somewhere, give it a direction and finally some boundaries.
 
-~~So, the way things are at the moment we have a 2D canvas we can paint on, an imaginary 3D world and an imaginary 2D canvas that we are trying to spawn into that 3D world, but just selecting a plane we want to spawn it in doesn't really places it in the map yet. We still need to position it somewhere, give it a direction and finally some boundaries.~~
 
 **Positioning:**
 Lets start with positioning. Picture yourself trying to select a **2D plane** in the 3D world: You have the axis of the plane (XY), you know a plane is infinite so you don't really need to select a position in the Xs or in the Ys for this XY plane, what else is missing? The Z value. Remember your plane is 2D, is flat, if you want to place it in a 3D world you will have to give it a Z value. Lets take 0 for the Z value, now you can see what seems to be a thin infinite paper at Z=0, expanding infinitely in the X and Y directions.
@@ -103,7 +174,7 @@ Why was that important? Because it will help us identify which of the two planes
 
 Here is where our 2D canvas in a 3D world evolves into something else. Let me however start by explaining a little problem we have right now.
 
-Lets say you have several 3D points scattered across your beautifull 3D world, and you decide to project those into your 2D canvas. Well, your canvas has an origin, a width and a height in pixels, so you can start to look for those points whos X and Y values lie within the canvas range and you project them, paste them, on your 2D canvas. Do you see the problem? In a 3D world with infinite depth, you would be pasting into your canvas absolutely every point whos X and Y value felt between your 2D canvas' range, whether that point is on one side of your 2D canvas of the other, you would paste them all. The final result would look like an X-ray render with no real beginning or end.
+Lets say you have several 3D points scattered across your beautiful 3D world, and you decide to project those into your 2D canvas. Well, your canvas has an origin, a width and a height in pixels, so you can start to look for those points whos X and Y values lie within the canvas range and you project them, paste them, on your 2D canvas. Do you see the problem? In a 3D world with infinite depth, you would be pasting into your canvas absolutely every point whos X and Y value felt between your 2D canvas' range, whether that point is on one side of your 2D canvas of the other, you would paste them all. The final result would look like an X-ray render with no real beginning or end.
 
 for each point
     is the point within the XY range of my 2D canvas in a 3D world?
@@ -119,11 +190,28 @@ Lets add two values to our 2D canvas... oh, whats that? 2D-canvaskemon-in-a-3D-w
 
 These planes are just going to be two numbers that define a Z value for now. Lets imagine that one of our planes' value is 5 and the other one is -10. Can you guess which one is the near plane and which one is the far plane? If you think about the direction of the camera (+Z) then it becomes easy to know: since the camera's direction is +Z, the lowest value is the near plane while the highest value is the far plane.
 
-All that is left to do is to make sure we only render those points that fall within the boundaries, which you should now be able to picture as a 3D box. Sure, this might not completely solve the X-ray problem, but it will surely mitigate it. At least the points being rendered are those that are within the field of view. We will leave this topic as-is for now.
+All that is left to do is to make sure we only render those points that fall within the boundaries, which you should now be able to picture as a 3D box. Sure, this might not completely solve the X-ray problem, but it will mitigate it. At least the points being rendered are those that are within the field of view. We will leave this topic as-is for now.
 
 
+## Further separating the Camera from the Application canvas
 
-## Camera size & scale
+We have a size problem right now. Picture this: You decide to project some points on your app canvas whos dimensions are (300, 200) pixels. The point you get comes with the 3D world coords of (200, -150, 50). Now, since you know you have to invert the Ys and we are not using the Zs yet, you call in the paint operation at (200,150). That gives you a point that from your canvas's center point of view, it looks like its located on the fourth quadrant. Now, render the same point with a canvas of (1000, 1000). As you can see, the point is now located at the second quadrant.
+
+You can imagine this in our 3D world as if we are manually expanding and contracting our camera's size: We know the origin point of our camera is the 0,0,0 in the 3D world, and we know the width and height is defined in pixels in that world, we also know that we have decided that our camera's width and height will be that of the canvas. So incrementing the width just moves the X limit further away, same with the Y. This means that with how things are right now, the canvas has total control over the camera's size.
+
+We need our camera to have its own independent size that we can manuipulate. We also know that this camera lives in our 3D world, and our 3D world measurement units are pixels. We could try to solve this problem in one of two ways:
+
+- Assigning my own values to the camera's width and height.
+
+- PROBLEM: CANVAS CONTROLS CAMERA'S SIZE, MEANING HOW MUCH WE SEE OF THAT WORLD DEPENDS ON THE CANVAS
+    - WE WANT TO BE ABLE TO CONTROL THAT, THIS WOULD ALLOWS US TO ZOOM IN AND OUT
+- SOLUTION:
+    - ONE: WE COULD JUST SET OUR OWN PIXEL VALUES FOR THE CAMERA
+        - BUT then that means we would include the points into the paint phase but if the camera is bigger we would not be able to see them, only if its smaller
+        - We would have to then start thinking about what to do with the final image and any potential wasted space on the canvas, or cropping on the image.
+    - TWO: SET WORLD UNITS AND NORMALIZE
+- **FREE WILLIAM! (Allowing the camera to move free in the 3D WORLD)
+
 
 
 
