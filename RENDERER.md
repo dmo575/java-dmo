@@ -161,11 +161,14 @@ Canvas.paint()
 
     // this is how we are projecting our 3D points right now
     for each point P in points:
+        // check out the positive X and negative Y, that's how we tell that we will treat the X axis as-is and invert the Y one.
         draw a point on the canvas at (P.X, -P.Y)
 ```
 **FORMULAS**
 ```
-None so far
+Drawing a point:
+    (P.X, -P.Y)
+    - We invert the 3D world value of the Y because we treat that axis differently
 ```
 
 ### **Stablishing the boundaries: FOV**
@@ -215,20 +218,116 @@ Camera class:
 ```
 **FORMULAS**
 ```
-None so far
+Check if point P is within canvas' XY range:
+    P.X >= 0 && P.X <= Canvas.width &&
+    -P.Y >= 0 && -P.Y <= Canvas.height
+
+Check if point P is within camera's Z range:
+    P.Z >= Cam.near_plane && P.Z <= Cam.far_plane
+
+Drawing a point:
+    (P.X, -P.Y)
+    - We invert the 3D world value of the Y because we treat that axis differently
 ```
 <a id="cam"></a>
 
-## Freeing the camera
+## The truth about the projection loop
+
+So far, we have managed to spawn a camera in our 3D world. And we can clearly see some well defined actors:
+
+- The 3D space where the points live
+- The points that live in a 3D space
+- A camera, which is another entity placed in the 3D space
+- The application canvas
+
+The reason we are able to connect the camera with the application canvas is because we have connected a lof of things to match between those two. That's why we think of the camera as the representation of the application canvas in the 3D space. Examples of those common values are:
+
+- Origin point: The camera starts growing vertically and horizontally from the (0,0,0), just like the canvas grows from the (0,0)
+- Dimensions: The camera's size (width and height) is exactly the same as the application canvas' size
+- Aspect ratio: Since the camera's and application canvas' sizes are the same, so are they aspect ratios
+- Position: The camera spawns the same area in the 3D world as the application canvas spawns in its 2D world.
+
+
+
+
+
+
+
+## Freeing the camera - Part 1: Positioning
+
+
+- SO FAR: we got a canvas plus the Z planes
+- The truth about the projection loop
+    - There are two things that we are constantly computing in the projection loop, one is the position of the camera in the 3D world, the other one is the position of everything that lives in that 3D world in relation to the camera. This is how you should visualize it:
+        - First, we place the camera in the 3D world
+        - Then, imagine we spawn the world points, and then we proceed to move them and rotate them as neccesairly so that it lands in the correct place in relation to the camera.
+        That's right, the camera might have an initial position relative to the 3D world, but that position will never change, nor its rotation. Anything that moves or rotates after the camera has been placed will be the points in the 3D world. The points move to get within the correct place of the cameras FOV, and the points rotate to get within the correct place of the cameras FOV. Once that is done, we apply some perspective and that's it, we are done. **The camera is actually a scatic object. Once spawn, it stays there the whole time**
+        It might grow in size and we will see how to do that, but its position and rotation will always remain the same.
+
+
+    Here I will reveal that the camera is bound to always be static, is the worls the one that moves, and rotates. Scale is just an illusion of projection created with the help of scale vectors.
+    - You think the camera could move, but in reality is the world that moves.
+    - When we do work in the points loop, we are applying two kinds of offsets to 
+     we are just applying different kinds of offsets to those points so that they end up at the correct place in the screen, and the best way to visualize that in our 3D world is to just see the world moving and rotating in front of a scatic camera.
+    - Now, there is something else to think about. The place the 3D camera is while those transformations occur is one we have defined already, but also is one that we can still modify
+- Positioning
+    Here I will give a position to the camera, but will explain that is just a number that is meant to be an XY offset for the world.
+- Scale
+    Here I will
+- Units
+- 
+
+
+
 
 
 Our goal of spawning an embassador for the application canvas in the 3D world is complete. Now we just need to make it better and better. For that we will have to start breaking a lot of the connections that we have been making between our now named camera and our application canvas.
 
-### Zooming in/out: The problem.
+There are many connections that we have built between the application canvas and the camera:
+- Origin point
+- Dimensions (width, height)
+- Aspect ratio
+- Position
+- Rotation
+- etc...
 
-When we think about what we would want to do with a camera, one of the first things that might come to mind is zomming in and out. But the way things are at the moment makes this impossible for us. The reason is because in order for us to zoom in and out we need to have control of the camera's XY size. Now, we can try giving the camera its own width and height, but doing that right now wouldnt yield any proper results.
+These connections need to be "broken", and by that I mean that we will need to find a way of allowing the camera to have its own values for many of these, and then find a way to use those values to **modify the points we want to render**. So, when we break connections between the camera and the application canvas so we can "move the camera", in reality we are looking for formulas that would allows us to move the points. So when we "move the camera" to the right, in reality we move the whole 3D world to the left.
 
-Lets say that we add a couple of floats to the camera, one for width and another one for height. Now lets update our paint function to accomodate for that:
+The first thing we will add to the camera is its own position, which would allow us to move the camera around in the 3D world.
+
+### The truth about transformations
+
+
+
+Right now the camera's position is tied to the position of the application canvas.
+
+
+```
+Camera class:
+    float near_plane, far_plane;
+    Vector position;
+```
+
+### Computing the camera's position
+
+Since we will now give the camera its own position, we need to understand how that affects the projection.
+
+
+
+So far while looping trough the points in the 3D world in our projection, we have been checking if the point is within the application canvas' range when it comes to the X and Y values
+
+
+
+
+## Freeing the camera - Part 2: Zooming
+
+Now that our camera has its own position we can dive into scaling.
+
+### The problem
+
+When we think about what we would want to do with a camera, one of the first things that might come to mind is zomming in and out. But the way things are at the moment makes this impossible for us. The reason is because in order for us to zoom in and out we need to have control of the camera's XY size. Now, we can try giving the camera its own width and height, but doing that right now wouldn't yield any proper results:
+
+Lets say that we add a couple of floats to the camera, one for width and another one for the height. Now lets update our paint function to accomodate for that:
 
 ```
 Canvas.paint()
@@ -240,47 +339,46 @@ Canvas.paint()
             No: continue
 ```
 
-We changed the pseudo-code so it now checks the camera's XY values (aka its width and height). Do you see what would that do? It effectively gives the camera its own width and height, so you should be able to picture a camera with its own XY dimensions now, independent of the application canvas' ones.
-
-With this new set up, we have our application canvas with its own dimensions in pixels and our camera in the 3D world with its own XY dimensions in pixels too, since that is the units of our 3D world so far. This presents to us three posible scenarios. Lets take a look at them:
+We changed the pseudo-code so it now checks the camera's XY values (aka its width and height). Do you see what would that do? It effectively gives the camera its own width and height, so you should be able to picture a camera with its own XY dimensions now (in pixels, remember the 3D world also works in pixels for now), independent of the application canvas' ones. Now this presents to us 3 possible scenarios:
 
 - Projecting an image when the camera's XY size is the same as the application canvas':
     - This is basically what we have been doing so far. No changes.
 - Projecting an image when the camera's XY size is smaller than the application canvas':
-    - Here you need to imagine the camera's XY as a window you can partially close. What happens when you partially close a window? You see less of the outside, that's all that happens.
-    So if you recude the camera's XY dimensions, you are NOT shrinking what you see, you are just resizing the window you use to look outside. This means that when you go to the canvas you will have extra space that you wont use. You can think about it this way: the camera is a 4x4 paper, and you want to exactly copy (meaning same size as well) wathever drawing is in that paper into a 6x6 paper (this would be the canvas). You will start copying from the top left corner and by the time you finish, you will see that you have an unpainted horizontal stripe at the bottom of the paper and another unpainted vertical stripe at the right end of the paper.
+    - This is very easy to imagine if you follow this: Imagine the camera with the same width and height as the application canvas, and now imagine that you resize the camera down BUT keep highligted that previous boundaries you had at the beginning to. Do you see that space between the camera limits and its previous limits, all that will be unused space in the canvas that we will not paint. So as you can see we are not really zooming in or out, we are just resizing the camera to be smaller than the canvas, which means that we will just paint less of what we could, but not smaller.
     **IMG 04**
+
 - Projecting an image when the camera's XY size is bigger than the application canvas':
     - No visual changes will happen here because as already mentioned, resizing the camera this way just creates a bigger window to look from, but when it is time to paste that image, is like copying an image from a 6x6 paper onto a 4x4 paper without changing the scale, starting from the top left corner. Wathever extra was on the 6x6 will never be drawn because there is no space. This means that the end result of this is the same result you would get if you shrink the camera's XY dimensions to those of the application canvas' ones and paint again.
     **IMG 05**
 
 However not all is bad about this. At least we now have a camera with its own dimensions in that 3D world. Kind of useless when it comes to projecting to the canvas but still, we can use this. This is a first good step, and the reason for that is this:
 
-Zooming in and out means that our camera captures more of the 3D world (if we want to zoom out) or less of the 3D world (if we want to zoom in) and then we get that view and project it into our canvas, using presumably all of its space. This is what creates that zoom in/out illusion; the resizing of the camera's XY plane captured in the same immutable application canvas.
+Zooming in and out means that our camera captures more of the 3D world (if we want to zoom out) or less of the 3D world (if we want to zoom in) and then we get that view and project it into our canvas as we shrink it down or up. This is what creates that zoom in/out illusion; the resizing of the projection pasted on the canvas.
 
-Now that we understand the problem, understand what we want.
+Now that we understand the problem, lets understand what we want.
 
-### Zooming in/out: What would the solution look like
+### What would the solution look like
 
-In order for us to be able to zoom in and out, what we need to do is to have the camera be able to increase or decrease its XY size, and then have wathever the camera captures be projected onto the same application canvas. This creates the effect of zooming in and out. Check out the image:
+Let me repeat this again: in order for us to be able to zoom in and out, what we need to do is to have the camera be able to increase or decrease its XY size, and then have wathever the camera captures be shrink down or up to fit the application canvas' size. This creates the effect of zooming in and out. Check out the image:
 
 **IMG 06**
 
-Imagine that instead of some points we can project a circle for a moment. You can see how increasing the camera's XY size will give the effect of zooming out right? Sure it's not a very centered zoom out, because we haven't tackeld that yet, but centered or not, it is definitely zoomed out in the canvas, and that is what we are looking for.
+With that example you can see how increasing the camera's XY size will give the effect of zooming out right? Sure it's not a very centered zoom out, because we haven't tackeld that yet, but centered or not, it is definitely zoomed out in the canvas, and that is what we are looking for. So we can conclude then that increasing the camera's size is definitely one of the things we want to do.
+
 
 ### What it means to break the connection between the camera and the canvas
 
-Before continuing, is important to mention a couple of thins about what happens when we give the camera its own width and height.
+Before continuing, is important to mention a couple of thins about what happens when we give the camera its own width and height:
 
-When do that, we are essentially breaking the connection between the camera and the application canvas in a couple of places. This means that wathever solution we are looking for must address this issue, it must reconnect these places. This is what we are breaking:
+When giving the cammera its own width and height, we are essentially breaking the connection between the camera and the application canvas in a couple of places, and means that wathever solution we are looking for must address this issue, it must reconnect these places. This is what we are breaking:
 
-- **Sizes (width and height):** The most obvious thing we are breaking is the actual width and height connnection that the camera and the application canvas shared. We built this connection a while a go when we decided to assign the pixel as the 3D world's measurement unit and give the then "2D imaginary canvas in a  3D world" the X and Y values that the application canvas had. We will have to reconnect the size somehow.
+- **Sizes (width and height):** The most obvious thing we are breaking is the actual width and height connnection that the camera and the application canvas shared. We built this connection a while a go when we decided to assign the pixel as the 3D world's measurement unit and give the then "2D imaginary canvas in a 3D world" the X and Y values that the application canvas had. We will have to reconnect the size somehow.
 
-- **Aspect ratio:** We indirectly broke this too, because aspect ratio depends on the width and height, so by having its own values for those, we are also obtaining our own independent aspect ratio.
+- **Aspect ratio:** We indirectly broke this too, because aspect ratio depends on the width and height, so by giving the camera its own values for those, we are also giving it its own independent aspect ratio.
 
 **About the aspect ratio:**
 
-Aspect ratio is a decimal number that records the size relation between the width and the height. The formula for the aspect ratio is w/h.
+Aspect ratio is a decimal number that records the size relation between the width and the height. The formula for the aspect ratio is **w/h.**
 
 There are three possible values that we can get from that formula: A number between 0 and 1 (not included), an exact 1 and finally a number superior than 1.
 
@@ -288,41 +386,78 @@ There are three possible values that we can get from that formula: A number betw
 
 - **An exact 1:** Getting this means that our screen's shape is exactly a square.
 
-- **Between one and infinite+:** Getting this means that our screen's shape is akin to a landscape. The lower the number the more horizontal it grows.
+- **Between one and infinite+:** Getting this means that our screen's shape is akin to a landscape. The higher the number the more horizontal it grows.
 
-If you invert the formula from w/h to h/w you also get an aspect ratio but instead of getting the aspect ratio relative to the width, you get it relative to the height. Same thing, but when people talk about aspect ratio (like buying a monitor) they usually go with w/h.
+If you invert the formula from **w/h** to **h/w** you also get an aspect ratio but instead of getting the aspect ratio relative to the width, you get it relative to the height. Same thing, but when people talk about aspect ratio (for example when listing a monitor's aspect ratio in a store) they usually go with **w/h**. We will use both formulas so familiarize with what it really means.
 
-The aspect ratio of a screen is usually not written down as the decimal number, people think it more elegant to write it down as a fraction (6:20, 8:16, aka Six by twenty, Eight by Sixteen), but since we are computing stuff with that number we need to use its decimal representation. 
+Extra: The aspect ratio of a screen is usually not written down as the decimal number, people think it more elegant to write it down as a fraction (6:20, 8:16, aka Six by twenty, Eight by Sixteen). So you look for that number when checking the TV or monitor you want to buy.
 
 
 ### Cheking out more approaches to better understand the idea
-
-We know the problem and we know the solution we are looking for. But before implementing it, lets take a look at what that solution's pros and cons are as well as two other possible solutions that we could implement.
 
 We need to somehow, during projection, resize the resulting image to fit on the canvas. Whether the canvas is smaller or bigger shouldn't matter, it should work both ways. We also know that by giving the camera its own dimensions, we broke both the width and height height connection and the aspect ratio connection we had with the application canvas. Keeping those two in mind, lets see what we can do:
 
 - **Inner boxing:**: This solution would resize the projection down to make sure that the canvas can display the full image while conserving the camera's aspect ratio.
     - Pros: You get to keep control of the camera's aspect ratio.
-    - Cons: While you would be able to always show what the camera captures, you will not always make use of the whole canvas.
-    - How its made: We will never fix the connection between the camera's and application canvas' aspect ratios. We will only reconnect either the width or height by constraining it to the application canvas' value while letting the other of the two sizes adjust proportionally.
+    - Cons: While you would be able to always show what the camera captures in full, you will not always make use of the whole canvas.
+    - How its made: We will never fix the aspect ratio connection. We will only reconnect either the width or height by constraining it to the application canvas' value while letting the other of the two sizes adjust proportionally so that we can keep the camera's aspect ratio.
 **IMG 50OLD**
+
 - **Outer boxing:** We would prioritize using the whole application canvas while mantaining the proportions of the camera in the projection.
     - Pros: You get to use the whole canvas.
     - Cons: You will have to do some cropping; you wont always capture all the camera sees in your canvas.
-    - How its made: Similar to Inner boxing, we leave the aspect ratio connection broken and only constrain either the width or height and leave the un-constrained to adjust itself. The difference here is that we would constrain the smallest of the two while with Inner boxing we would constrain the bigger of the two values.
+    - How its made: Similar to Inner boxing, we leave the aspect ratio connection broken and only constrain either the width or height and leave the un-constrained to adjust itself. The difference here is that we would constrain the smallest of the two values of width and height while with Inner boxing we would constrain the bigger of the two.
 **IMG 50BOLD**
 
 - **Dynamic aspect ratio:** We would let the canvas control the camera's aspect ratio, but we would keep the camera in control of its overall size by adding a scale factor.
     - Pros: You get to use the whole canvas and always paint everything the camera has to show. You still can resize the camera via a scale factor variable.
     - Cons: You wont have control over the aspect ratio from within the camera.
-    - How its done: We reconnect both the aspect ratio and the dimensions.
+    - How its done: We reconnect the aspect ratio. This will allows us to esentially reconnect the width and height during the resizing.
 **IMG 50COLD**
 
 
-I have seen solutions 1 and 3. Solution 1 you can see it in old applications playing in newer hardware. Solution 3 is what most applications have today by default. I don't think anyone in their right mind would use solution 2 but its a good thing to imagine it. We will implement solution 3.
+I have seen solutions 1 and 3. Solution 1 you can see it in old applications playing in newer hardware. Solution 3 is what most applications have today by default. I don't think anyone in their right mind would use solution 2 but its a good thing to imagine it as an exercise. We will implement solution 3.
+
+
+### Zooming in/out - Part 1: An incomplete solution
 
 
 
+- Positioning the camera
+
+
+
+
+
+
+Now its time to think about where to scale from.
+
+When we scale, we need a sort of pivot. We don't just scale out of nowhere. Think about it, when you saw the scaling at image 06:
+
+**Img 06**
+
+Did you thought that was a natural scaling ? No, right? Wouldn't this scaling be better:
+
+**Img 07**
+
+The difference between those two is the pivot they are using for the scaling. The first scaling is using the origin point (the 0,0 and 0,0,0) on both the camera and the application canvas as the scaling pivot. The second image however, is using the center of both the camera and the application canvas as the pivot to spread around all the scaling
+
+
+
+We will take what we have and implement solution 3.
+
+
+
+
+
+- Talk about the origin point
+    - Where do we take this
+- Scale vector: start, direction, ammount
+    - Start: Origin points
+    - Direction: Original point in the camera
+    - Amount: the ammount we scaled down/up on each axis
+- What about the units of measurement ??
+    - 
 
 
 - How scaling works
@@ -356,8 +491,9 @@ Lets go with solution 3. We will give the camera a "dynamic aspect ratio", meani
 In order to constrain the aspect ratio while mantaining the option of resizing, we need to take these into consideration:
 
 - Initial scale: we will give it 1.0f as the initial scale.
-- Initial dimensions: we will assign it the canvas' dimensions as the default one. This means that a scale of 1.0f will bring the camera's size to be its initial one, which is the canvas size.
+- Initial dimensions: we will assign it the canvas' dimensions as the default ones. This means that a scale of 1.0f will bring the camera's size to its default size, which is the canvas size.
 
+This is what the camera might look like with what we have:
 ```
 Camera class:
     float near_plane, far_plane, width, height;
@@ -369,19 +505,19 @@ Camera class:
 
 ```
 
-With that, all the variables are in place. Now all that's left is to use them. First we need to make sure we "capture all the space we need to capture for the projection", meaning make sure that we let any point that lies within the range of the camera to pass the "is within range" check. For that we need to know the camera's dimensions which are these:
+With that, all the variables are in place. Now all that's left is to use them.
+
+First we need to make sure we "capture all the space we need to capture for the projection", meaning make sure that we let any point that lies within the range of the camera to pass the `is within range` check. For that we need to know the camera's dimensions which are these:
 
 camera.x = canvas.x * Camera.scale;
 camera.y = canvas.y * Camera.scale;
 
 We will use those from now on when checking this part of the pseudo-code: `Is point within the CAMERA'S XY range`.
 
-Now we need to make sure we draw the points at the correct place
-Lets change our `draw a point on the canvas at (...)` to use these:
+Now we need to make sure we draw the points at the correct place when projecting. Lets change our `draw a point on the canvas at (...)` to use these:
 (P.X / Camera.scale, P.Y / Camera.scale)
 
-We will then change how we project the 3D world into the canvas:
-
+This is how the paint method looks like:
 ```
 Canvas.paint()
     vectors[] points = { ... }
@@ -391,15 +527,17 @@ Canvas.paint()
             Yes: draw a point on the canvas at (P.X / Camera.scale, -(P.Y / Camera.scale))
             No: continue
 ```
-Formulas:
+Formulas & notes:
 ```
 Camera's origin: (0,0)
 Camera's XY dimensions: (Canvas.x * Camera.scale, Canvas.y * Camera.scale)
 ```
 
-Look at that, we can now zoom in and out... more or less that is... It's obvious that our zoom in/out is taking the top left corner as some sort of pivot for the scaling. Lets break down what is going on.
+Look at that, we can now zoom in and out... more or less that is. It's obvious that our zoom in/out is taking the top left corner as some sort of pivot for the scaling. Why?
 
- The reason is simple: We need a point of reference that we can use as an origin to scale things up and down from it. That point must be located at the same position in both the camera and the canvas, and we are using the origin point for that right now. Let me explain:
+The reason is simple. What we are doing right now is 
+
+The reason is simple: We need a point of reference that we can use as an origin to scale things up and down from it. That point must be located at the same position in both the camera and the canvas, and we are using the origin point for that right now. Let me explain:
 
 #### What goes into scale-less projecting:
 If we want to project from one canvas to another (in this case from the camera's XY to the application canvas) even when those canvases do not have the same scale (remember they got the same aspect ratio, is just the scale that is off), then we need two things: the scale factor, a point of reference and the point
